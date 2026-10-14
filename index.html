@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEN İlaç - TR Stok & Satis Konsolide Merkezi</title>
+    
+    <!-- FontAwesome & SheetJS Style -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: #ffffff;
+            --primary: #4f46e5;
+            --shadow-3d: 0 15px 35px -5px rgba(0, 0, 0, 0.35), 0 10px 15px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg-gradient); min-height: 100vh; padding: 30px 20px; color: #0f172a; }
+        .main-container { max-width: 1800px; margin: 0 auto; }
+
+        /* ÜST BASLIK & TARIH / SAAT KARTI */
+        .header-card {
+            background: var(--card-bg);
+            padding: 22px 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-3d);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            border-left: 6px solid var(--primary);
+        }
+
+        .header-title-box { display: flex; align-items: center; gap: 18px; }
+        .logo-box {
+            width: 58px; height: 58px;
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 24px;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+        }
+        .header-title-box h1 { font-size: 20px; font-weight: 800; color: #0f172a; }
+        .header-title-box p { font-size: 13px; color: #64748b; margin-top: 3px; font-weight: 600; }
+
+        /* CANLI TARIH & SAAT VE RAPOR TARIHI */
+        .header-actions-right { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .live-datetime {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 10px 18px;
+            border-radius: 14px;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13px; font-weight: 700; color: #334155;
+        }
+        .live-datetime i { color: #4f46e5; font-size: 16px; }
+
+        .date-picker-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 8px 14px;
+            border-radius: 14px;
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; font-weight: 700; color: #334155;
+        }
+        .date-picker-box input { border: none; background: transparent; font-size: 13px; font-weight: 600; outline: none; cursor: pointer; color: #0f172a; }
+
+        /* 3D ANIMASYONLU BUTON GRUBU */
+        .btn-group-3d { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+        
+        .btn-3d {
+            position: relative;
+            border: none;
+            padding: 12px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 14px;
+            cursor: pointer;
+            color: white;
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.15s ease-in-out;
+            outline: none;
+            user-select: none;
+        }
+
+        .btn-3d.upload { background: linear-gradient(145deg, #3b82f6, #1d4ed8); box-shadow: 0 6px 0 #1e40af, 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-3d.upload:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #1e40af, 0 12px 22px rgba(0,0,0,0.25); }
+        .btn-3d.upload:active { transform: translateY(4px); box-shadow: 0 2px 0 #1e40af; }
+
+        .btn-3d.clear { background: linear-gradient(145deg, #ef4444, #b91c1c); box-shadow: 0 6px 0 #991b1b, 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-3d.clear:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #991b1b, 0 12px 22px rgba(0,0,0,0.25); }
+        .btn-3d.clear:active { transform: translateY(4px); box-shadow: 0 2px 0 #991b1b; }
+
+        .btn-3d.download { background: linear-gradient(145deg, #10b981, #047857); box-shadow: 0 6px 0 #065f46, 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-3d.download:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #065f46, 0 12px 22px rgba(0,0,0,0.25); }
+        .btn-3d.download:active { transform: translateY(4px); box-shadow: 0 2px 0 #065f46; }
+
+        .btn-3d.email { background: linear-gradient(145deg, #8b5cf6, #6d28d9); box-shadow: 0 6px 0 #5b21b6, 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-3d.email:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #5b21b6, 0 12px 22px rgba(0,0,0,0.25); }
+        .btn-3d.email:active { transform: translateY(4px); box-shadow: 0 2px 0 #5b21b6; }
+
+        #hidden_file_input { display: none; }
+
+        /* SEKME GECISLERI */
+        .tab-nav { display: flex; gap: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.08); padding: 8px; border-radius: 16px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 22px; background: #1e293b; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .tab-btn.active { background: var(--primary); box-shadow: 0 4px 15px rgba(79,70,229,0.4); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* KONTROL & ARAMA PANELI */
+        .control-panel {
+            background: var(--card-bg); padding: 20px 30px; border-radius: 18px; box-shadow: var(--shadow-3d);
+            margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+        }
+        .search-box-multisource { position: relative; flex: 1; min-width: 320px; display: flex; gap: 12px; align-items: center; }
+        .search-inner-wrapper { position: relative; flex: 1; }
+        .search-inner-wrapper i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #4f46e5; font-size: 16px; }
+        .search-input {
+            width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e2e8f0; border-radius: 14px;
+            font-size: 13px; font-weight: 600; outline: none; background: #f8fafc; transition: all 0.2s;
+        }
+        .search-input:focus { border-color: #4f46e5; background: #ffffff; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12); }
+        
+        .btn-filter-clear {
+            padding: 14px 20px; background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 14px;
+            font-weight: 700; font-size: 13px; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: 0.15s; white-space: nowrap;
+        }
+        .btn-filter-clear:hover { background: #e2e8f0; color: #0f172a; }
+
+        .status-badge { font-size: 13px; font-weight: 700; color: #d97706; background: #fffbeb; padding: 8px 16px; border-radius: 10px; border: 1px solid #fde68a; }
+
+        /* ANA TABLO TASARIMI VE SABIT BASLIKLAR (STICKY HEADER) */
+        .content-panel { background: var(--card-bg); padding: 25px; border-radius: 18px; box-shadow: var(--shadow-3d); border: 1px solid #cbd5e1; }
+        .table-responsive { width: 100%; overflow-x: auto; max-height: 650px; border-radius: 12px; border: 1px solid #cbd5e1; }
+        table { width: 100%; border-collapse: collapse; background: white; white-space: nowrap; }
+        
+        th, td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-size: 13px; }
+        th { text-align: center !important; vertical-align: middle; position: sticky; z-index: 20; background-clip: padding-box; }
+        
+        #ozet_tablo thead tr:nth-child(1) th { top: 0; z-index: 22; background-color: #4338ca; color: white; }
+        #ozet_tablo thead tr:nth-child(2) th { top: 38px; z-index: 21; background-color: #0284c7; color: white; }
+        #depostok_tablo thead tr:nth-child(1) th { top: 0; z-index: 22; background-color: #4338ca; color: white; }
+        #ana_konsolide_tablo thead tr:nth-child(1) th { top: 0; z-index: 22; background-color: #4338ca; color: white; }
+        #ana_konsolide_tablo thead tr:nth-child(2) th { top: 40px; z-index: 21; background-color: #4f46e5; color: white; }
+
+        td.text-left { text-align: left !important; }
+        td.text-center { text-align: center !important; }
+        td.text-num { text-align: right !important; font-weight: 600; }
+
+        th.group-satis { background: #4338ca; color: white; font-size: 15px; font-weight: 800; }
+        th.group-depo { background: #3730a3; color: white; font-size: 15px; font-weight: 800; }
+        th.sub-header { background: #4f46e5; color: white; font-weight: 700; }
+
+        th.th-alliance { background: #581c87 !important; color: white; }
+        th.th-as { background: #991b1b !important; color: white; }
+        th.th-bek { background: #0ea5e9 !important; color: white; }
+        th.th-gek { background: #7f1d1d !important; color: white; }
+        th.th-iskoop { background: #be123c !important; color: white; }
+        th.th-nevzat { background: #0284c7 !important; color: white; }
+        th.th-sancak { background: #2563eb !important; color: white; }
+        th.th-selcuk { background: #d97706 !important; color: white; }
+
+        td.col-gen { background-color: #e0f2fe !important; color: #0369a1; font-weight: 700; }
+        td.col-alliance { background-color: #f3e8ff !important; color: #581c87; }
+        td.col-as { background-color: #fee2e2 !important; color: #991b1b; }
+        td.col-bek { background-color: #e0f2fe !important; color: #0369a1; }
+        td.col-gek { background-color: #fce7f3 !important; color: #831843; }
+        td.col-iskoop { background-color: #ffe4e6 !important; color: #9f1239; }
+        td.col-nevzat { background-color: #e0f2fe !important; color: #0284c7; }
+        td.col-sancak { background-color: #dbeafe !important; color: #1e40af; }
+        td.col-selcuk { background-color: #fef3c7 !important; color: #92400e; }
+        td.col-toplam { background-color: #d1fae5 !important; color: #065f46; font-weight: 800; }
+
+        td.clickable-cell { cursor: pointer; color: #2563eb; font-weight: 600; text-decoration: underline; transition: 0.15s; }
+        td.clickable-cell:hover { background: #e0e7ff !important; color: #1e40af; }
+
+        /* MODAL STILI */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-card {
+            background: #ffffff; width: 90%; max-width: 850px; border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden;
+            animation: modalPop 0.2s ease-in-out;
+        }
+        @keyframes modalPop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #4f46e5, #3730a3); color: white;
+            padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { font-size: 16px; font-weight: 700; }
+        .modal-close { background: transparent; border: none; color: white; font-size: 22px; cursor: pointer; }
+        .modal-body { padding: 25px; max-height: 520px; overflow-y: auto; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; background: #f8fafc; }
+        .form-control:focus { border-color: #4f46e5; background: #ffffff; }
+        textarea.form-control { resize: vertical; min-height: 120px; }
+
+        .email-preview-box { background: #f1f5f9; padding: 15px; border-radius: 10px; border: 1px dashed #94a3b8; max-height: 200px; overflow-y: auto; font-size: 12px; }
+
+        .depo-detay-table { width: 100%; border-collapse: collapse; }
+        .depo-detay-table th { background: #f1f5f9; color: #334155; padding: 10px; font-size: 13px; border: 1px solid #cbd5e1; text-align: left; position: static !important; }
+        .depo-detay-table td { padding: 10px; font-size: 13px; border: 1px solid #cbd5e1; }
+
+        tbody tr:hover { background: #cbd5e1 !important; }
+        .row-checkbox, #select_all_checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+
+    <!-- UST HEADER -->
+    <div class="header-card">
+        <div class="header-title-box">
+            <div class="logo-box"><i class="fas fa-cubes"></i></div>
+            <div>
+                <h1>GEN İlaç - TR Stok & Satis Konsolide Merkezi</h1>
+                <p>Turkiye Satis Stok ve Musteri Depo Raporlama Sistemi</p>
+            </div>
+        </div>
+
+        <div class="header-actions-right">
+            <div class="date-picker-box">
+                <i class="fas fa-calendar-alt" style="color: #4f46e5;"></i>
+                <span>Rapor Tarihi:</span>
+                <input type="date" id="report_date_picker" onchange="stokApp.tarihDegisti()">
+            </div>
+            <div class="live-datetime">
+                <i class="fas fa-clock"></i>
+                <span id="datetime_display">Yukleniyor...</span>
+            </div>
+        </div>
+
+        <div class="btn-group-3d">
+            <button class="btn-3d upload" onclick="document.getElementById('hidden_file_input').click()">
+                <i class="fas fa-file-import"></i> Distan Veri Yukle
+            </button>
+            <input type="file" id="hidden_file_input" accept=".xlsx, .xls, .csv" multiple onchange="stokApp.dosyaYukle(event)">
+
+            <button class="btn-3d clear" onclick="stokApp.sayfayiTemizle()">
+                <i class="fas fa-trash-can"></i> Temizle
+            </button>
+
+            <button class="btn-3d download" onclick="stokApp.raporuIndir()">
+                <i class="fas fa-file-excel"></i> Raporu Indir
+            </button>
+
+            <button class="btn-3d email" onclick="stokApp.emailModalAc()">
+                <i class="fas fa-envelope"></i> E-Posta Gönder
+            </button>
+        </div>
+    </div>
+
+    <!-- SEKME GECISLERI -->
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="stokApp.sekmeDegis('detay')"><i class="fas fa-table"></i> 1. Konsolide Detay Raporu</button>
+        <button class="tab-btn" onclick="stokApp.sekmeDegis('ozet')"><i class="fas fa-chart-pie"></i> 2. Depo Dagilimli Stok Ozet</button>
+        <button class="tab-btn" onclick="stokApp.sekmeDegis('depostok')"><i class="fas fa-boxes-stacked"></i> 3. Urun Depo Stok Detaylari</button>
+    </div>
+
+    <!-- KONTROL & AKILLI ARAMA PANELI -->
+    <div class="control-panel">
+        <div class="search-box-multisource">
+            <div class="search-inner-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="multisource_search" class="search-input" placeholder="🔍 Akilli Arama: Buyuk/Kucuk harf, Turkce/Ingilizce karakter duyarsiz arama..." oninput="stokApp.canliAra()">
+            </div>
+            <button class="btn-filter-clear" onclick="stokApp.filtreyiTemizle()" title="Arama filtresini temizle">
+                <i class="fas fa-filter-circle-xmark"></i> Filtreyi Temizle
+            </button>
+        </div>
+        <div id="status_badge" class="status-badge">
+            <i class="fas fa-info-circle"></i> Sistem Hazir: Raporlarinizi yukleyebilirsiniz.
+        </div>
+    </div>
+
+    <!-- SEKME 1: KONSOLIDE DETAY RAPORU -->
+    <div id="tab_detay" class="content-panel tab-content active">
+        <div class="table-responsive">
+            <table id="ana_konsolide_tablo">
+                <thead>
+                    <tr>
+                        <th colspan="5" class="group-satis">Turkiye_Satis_Stok_Raporu</th>
+                        <th colspan="8" class="group-depo" id="th_depo_baslik_1">Depo Stoklari Musteri Urun 14.10.2026</th>
+                    </tr>
+                    <tr>
+                        <th class="sub-header" style="width: 50px;">
+                            <input type="checkbox" id="select_all_checkbox" title="Tümünü Seç / Kaldır" onchange="stokApp.tumunuSecKadir(this)">
+                        </th>
+                        <th class="sub-header">Malzeme Kodu</th>
+                        <th class="sub-header">Malzeme Ismi</th>
+                        <th class="sub-header">Lisansor</th>
+                        <th class="sub-header">Satışa Hazır Stok (Kutu)</th>
+                        <th class="sub-header th-alliance">ALLIANCE</th>
+                        <th class="sub-header th-as">AS</th>
+                        <th class="sub-header th-bek">BEK</th>
+                        <th class="sub-header th-gek">GEK</th>
+                        <th class="sub-header th-iskoop">ISKOOP</th>
+                        <th class="sub-header th-nevzat">NEVZAT</th>
+                        <th class="sub-header th-sancak">SANCAK</th>
+                        <th class="sub-header th-selcuk">SELCUK</th>
+                    </tr>
+                </thead>
+                <tbody id="tablo_govde">
+                    <tr>
+                        <td colspan="13" style="text-align: center; color: #64748b; padding: 40px; font-weight: 600;">
+                            Henuz veri yuklenmedi. Baslamak icin yukaridaki <strong>'Distan Veri Yukle'</strong> butonunu kullanabilirsiniz.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SEKME 2: DEPO DAGILIMLI STOK OZETI -->
+    <div id="tab_ozet" class="content-panel tab-content">
+        <div class="table-responsive">
+            <table id="ozet_tablo">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="ozet-ilac" style="vertical-align: middle; min-width: 320px;">ILAC ADI</th>
+                        <th class="group-satis" colspan="1">Turkiye_Satis_Stok_Raporu</th>
+                        <th class="group-depo" colspan="8" id="th_depo_baslik_2">Depo Stoklari Musteri Urun 14.10.2026</th>
+                        <th class="group-satis" rowspan="2" style="vertical-align: middle;">GENEL TOPLAM</th>
+                    </tr>
+                    <tr>
+                        <th class="ozet-gen">GEN STOK</th>
+                        <th class="ozet-depo th-alliance">ALLIANCE</th>
+                        <th class="ozet-depo th-as">AS</th>
+                        <th class="ozet-depo th-bek">BEK</th>
+                        <th class="ozet-depo th-gek">GEK</th>
+                        <th class="ozet-depo th-iskoop">ISKOOP</th>
+                        <th class="ozet-depo th-nevzat">NEVZAT</th>
+                        <th class="ozet-depo th-sancak">SANCAK</th>
+                        <th class="ozet-depo th-selcuk">SELCUK</th>
+                    </tr>
+                </thead>
+                <tbody id="ozet_tablo_govde">
+                    <tr>
+                        <td colspan="11" style="text-align: center; color: #64748b; padding: 40px; font-weight: 600;">
+                            Henuz veri yuklenmedi. Lutfen raporlari yukleyin.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SEKME 3: URUN DEPO STOK DETAYLARI -->
+    <div id="tab_depostok" class="content-panel tab-content">
+        <div class="table-responsive">
+            <table id="depostok_tablo">
+                <thead>
+                    <tr>
+                        <th class="t3-header" style="text-align: left !important; min-width: 350px; background-color: #4338ca; color: white;">ILAC ADI</th>
+                        <th class="t3-header" style="background-color: #4338ca; color: white;">Turkiye_Satis_Stok_Raporu <br> GEN STOK</th>
+                        <th class="t3-header" id="th_depo_baslik_3" style="background-color: #4338ca; color: white;">Depo Stoklari Musteri Urun 14.10.2026 <br> DEPO STOKLARI</th>
+                        <th class="t3-header" style="background-color: #4338ca; color: white;">GENEL TOPLAM</th>
+                    </tr>
+                </thead>
+                <tbody id="depostok_tablo_govde">
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #64748b; padding: 40px; font-weight: 600;">
+                            Henuz urun secilmedi veya veri yuklenmedi. 1. sekmeden urunleri seçebilirsiniz.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- DETAY MODALI -->
+<div id="depo_modal" class="modal-overlay" onclick="stokApp.modalKapat(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 id="modal_baslik">Urun Stok Dagilim Detayi</h3>
+            <button class="modal-close" onclick="stokApp.modalKapat()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <table class="depo-detay-table">
+                <thead>
+                    <tr>
+                        <th>Stok / Depo / Kaynak Adi</th>
+                        <th style="text-align: right;">Stok Miktari</th>
+                    </tr>
+                </thead>
+                <tbody id="modal_icerik"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- E-POSTA GÖNDERİM MODALI -->
+<div id="email_modal" class="modal-overlay" onclick="stokApp.emailModalKapat(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fas fa-envelope-open-text"></i> Rapor E-Posta Gönderim Entegrasyonu</h3>
+            <button class="modal-close" onclick="stokApp.emailModalKapat()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label><i class="fas fa-user-shield"></i> Alıcı E-Posta Adresi (Kime):</label>
+                <input type="email" id="email_to" class="form-control" value="h.demir@genilac.com" placeholder="ornek@genilac.com">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-heading"></i> E-Posta Konusu:</label>
+                <input type="text" id="email_subject" class="form-control" value="GEN İlaç - Günlük Konsolide Stok & Satış Raporu">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-comment-dots"></i> E-Posta Metin Mesajı (Body Üst Metni):</label>
+                <textarea id="email_message" class="form-control">Sayın İlgili,
+
+Müşteri depo stokları ve Türkiye satış stokları konsolide raporu aşağıda yer almaktadır. Rapor Excel dosyalarını aşağıdaki bağlantılara tıklayarak doğrudan indirebilirsiniz.
+
+İyi çalışmalar dileriz.</textarea>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-link"></i> Rapor İndirme Bağlantıları (URL):</label>
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; padding: 12px 14px; border-radius: 10px; font-size: 13px; color: #1e293b; font-weight: 600; display: flex; flex-direction: column; gap: 8px;">
+                    <div><i class="fas fa-file-excel" style="color: #10b981;"></i> <a id="link_preview_1" href="#" target="_blank" style="color: #2563eb; text-decoration: underline;">GEN_Depo_Dagilim_Ozet_20261014.xlsx (İndir)</a></div>
+                    <div><i class="fas fa-file-excel" style="color: #10b981;"></i> <a id="link_preview_2" href="#" target="_blank" style="color: #2563eb; text-decoration: underline;">GEN_Stok_Raporu_20261014.xlsx (İndir)</a></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-eye"></i> E-Posta Gövdesi Önizlemesi (Depo Dağılım Özet Tablosu):</label>
+                <div id="email_table_preview" class="email-preview-box">
+                    Önizleme yükleniyor...
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+                <button class="btn-3d clear" onclick="stokApp.emailModalKapat()" style="padding: 10px 18px; font-size: 12px;">İptal</button>
+                <button class="btn-3d download" onclick="stokApp.emailGonderAction()" style="padding: 10px 22px; font-size: 13px;">
+                    <i class="fas fa-paper-plane"></i> Outlook / Mail İstemcisi ile Gönder
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const stokApp = {
+        satisData: [],
+        depoData: [],
+        secilenUrunler: new Set(),
+
+        normalizeText(text) {
+            if (!text) return "";
+            return text.toString()
+                .replace(/İ/g, 'i').replace(/I/g, 'ı').replace(/İ/g, 'i')
+                .toLowerCase()
+                .replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i')
+                .replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u');
+        },
+
+        initLiveClock() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('report_date_picker').value = today;
+            this.tarihDegisti();
+
+            const updateClock = () => {
+                const now = new Date();
+                const gun = String(now.getDate()).padStart(2, '0');
+                const ay = String(now.getMonth() + 1).padStart(2, '0');
+                const yil = now.getFullYear();
+                const saat = String(now.getHours()).padStart(2, '0');
+                const dak = String(now.getMinutes()).padStart(2, '0');
+                const sn = String(now.getSeconds()).padStart(2, '0');
+                
+                document.getElementById('datetime_display').innerText = `${gun}.${ay}.${yil} - ${saat}:${dak}:${sn}`;
+            };
+            updateClock();
+            setInterval(updateClock, 1000);
+        },
+
+        tarihDegisti() {
+            let val = document.getElementById('report_date_picker').value;
+            if (!val) return;
+            let [yil, ay, gun] = val.split('-');
+            let formattedDate = `${gun}.${ay}.${yil}`;
+            let label = `Depo Stoklari Musteri Urun ${formattedDate}`;
+
+            document.getElementById('th_depo_baslik_1').innerText = label;
+            document.getElementById('th_depo_baslik_2').innerText = label;
+            document.getElementById('th_depo_baslik_3').innerHTML = `${label} <br> DEPO STOKLARI`;
+
+            let tarihFormattedStr = `${yil}${ay}${gun}`;
+            let name1 = `GEN_Depo_Dagilim_Ozet_${tarihFormattedStr}.xlsx`;
+            let name2 = `GEN_Stok_Raporu_${tarihFormattedStr}.xlsx`;
+
+            document.getElementById('link_preview_1').innerText = `${name1} (İndir)`;
+            document.getElementById('link_preview_2').innerText = `${name2} (İndir)`;
+            
+            // Web / Sunucu URL simülasyonu
+            let baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+            document.getElementById('link_preview_1').href = baseUrl + name1;
+            document.getElementById('link_preview_2').href = baseUrl + name2;
+        },
+
+        dosyaYukle(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    workbook.SheetNames.forEach(sheetName => {
+                        const sheet = workbook.Sheets[sheetName];
+                        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                        if (!rows || rows.length === 0) return;
+
+                        let isSatis = rows.some(r => r.some(c => c && (c.toString().includes("Satışa Hazır Stok") || c.toString().includes("Satis") || c.toString().includes("Malzeme Kodu"))));
+                        if (isSatis) {
+                            this.satisData = rows;
+                            return;
+                        }
+
+                        let isCencora = rows.some(r => r.some(c => c && c.toString().includes("MFli Stok Kutu")));
+                        if (isCencora) {
+                            let headerIdx = rows.findIndex(r => r.some(c => c && (c.toString().includes("Ürün Adı") || c.toString().includes("Urun Adi"))));
+                            if (headerIdx === -1) headerIdx = 1;
+                            let h = rows[headerIdx] || [];
+                            let kUrun = h.findIndex(x => x && (x.toString().includes("Ürün Adı") || x.toString().includes("Urun Adi")));
+                            let kDepo = h.findIndex(x => x && (x.toString().includes("Depo Adı") || x.toString().includes("Depo Adi")));
+                            let kMik = h.findIndex(x => x && x.toString().includes("MFli Stok Kutu"));
+                            if (kUrun !== -1 && kMik !== -1) {
+                                for (let i = headerIdx + 1; i < rows.length; i++) {
+                                    let r = rows[i];
+                                    if (r && r[kUrun]) {
+                                        let urun = r[kUrun];
+                                        let depo = kDepo !== -1 ? (r[kDepo] || "Cencora") : "Cencora";
+                                        let mik = parseFloat(r[kMik]) || 0;
+                                        if (mik > 0) {
+                                            this.depoData.push({ musteri: `Cencora ${depo}`, urun: urun, miktar: mik });
+                                        }
+                                    }
+                                }
+                            }
+                            return;
+                        }
+
+                        let isSancak = rows.some(r => r.some(c => c && c.toString().includes("Stok(MFli)")));
+                        if (isSancak) {
+                            let headerIdx = rows.findIndex(r => r.some(c => c && (c.toString().includes("ÜrünAdı") || c.toString().includes("UrunAdi"))));
+                            if (headerIdx === -1) headerIdx = 0;
+                            let h = rows[headerIdx] || [];
+                            let kUrun = h.findIndex(x => x && (x.toString().includes("ÜrünAdı") || x.toString().includes("UrunAdi")));
+                            let kDepo = h.findIndex(x => x && (x.toString().includes("DepoAdı") || x.toString().includes("DepoAdi")));
+                            let kMik = h.findIndex(x => x && x.toString().includes("Stok(MFli)"));
+                            if (kUrun !== -1 && kMik !== -1) {
+                                for (let i = headerIdx + 1; i < rows.length; i++) {
+                                    let r = rows[i];
+                                    if (r && r[kUrun]) {
+                                        let urun = r[kUrun];
+                                        let depo = kDepo !== -1 ? (r[kDepo] || "Sancak") : "Sancak";
+                                        let mik = parseFloat(r[kMik]) || 0;
+                                        if (mik > 0) {
+                                            this.depoData.push({ musteri: `Sancak ${depo}`, urun: urun, miktar: mik });
+                                        }
+                                    }
+                                }
+                            }
+                            return;
+                        }
+
+                        let headers0 = rows[0] || [];
+                        let hasStokCols = headers0.some(c => c && c.toString().endsWith('_stok'));
+                        if (hasStokCols) {
+                            let ilacIdx = headers0.indexOf('ilacadi');
+                            if (ilacIdx === -1) ilacIdx = 2;
+                            for (let i = 1; i < rows.length; i++) {
+                                let r = rows[i];
+                                if (!r || !r[ilacIdx]) continue;
+                                let urun = r[ilacIdx];
+                                headers0.forEach((colName, cIdx) => {
+                                    if (colName && colName.toString().endsWith('_stok')) {
+                                        let mik = parseFloat(r[cIdx]) || 0;
+                                        if (mik > 0) {
+                                            let colLower = colName.toString().toLowerCase();
+                                            let chan = colLower.includes('as_') ? 'AS' : 'SELCUK';
+                                            let branchName = colName.toString().replace('_stok', '').replace(/_/g, ' ');
+                                            this.depoData.push({ musteri: `${chan} ${branchName}`, urun: urun, miktar: mik });
+                                        }
+                                    }
+                                });
+                            }
+                            return;
+                        }
+
+                        let isIskoop = rows.some(r => r.some(c => c && c.toString().includes("STOK_MIKTARI")));
+                        if (isIskoop) {
+                            let headerIdx = rows.findIndex(r => r.some(c => c && c.toString().includes("URUN_ADI")));
+                            if (headerIdx === -1) headerIdx = 0;
+                            let h = rows[headerIdx] || [];
+                            let kUrun = h.findIndex(x => x && x.toString().includes("URUN_ADI"));
+                            let kMik = h.findIndex(x => x && x.toString().includes("STOK_MIKTARI"));
+                            let kGln = h.findIndex(x => x && x.toString().includes("DEPO_GLN_NO"));
+                            if (kUrun !== -1 && kMik !== -1) {
+                                for (let i = headerIdx + 1; i < rows.length; i++) {
+                                    let r = rows[i];
+                                    if (r && r[kUrun]) {
+                                        let urun = r[kUrun];
+                                        let gln = kGln !== -1 ? r[kGln] : "";
+                                        let mik = parseFloat(r[kMik]) || 0;
+                                        if (mik > 0) {
+                                            this.depoData.push({ musteri: `ISKOOP (${gln})`, urun: urun, miktar: mik });
+                                        }
+                                    }
+                                }
+                            }
+                            return;
+                        }
+                    });
+
+                    this.tablolariCiz();
+                    document.getElementById('status_badge').innerHTML = `<i class="fas fa-check-circle" style="color: #10b981;"></i> Raporlar basariyla yuklendi ve islendi!`;
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        },
+
+        tablolariCiz() {
+            if (this.satisData.length === 0 && this.depoData.length === 0) return;
+
+            this.detayTabloCiz();
+            this.ozetTabloCiz();
+            this.depoStokTabloCiz();
+        },
+
+        depoAdiniKanalizeEt(musteri) {
+            if (!musteri) return null;
+            let m = musteri.toString().toUpperCase().trim();
+            
+            if (m.includes("CENCORA") || m.includes("ALLIANCE") || m.includes("ALLIANZ") || m.includes("AH ")) return "ALLIANCE";
+            if (m.includes("BURSA") || m.includes("BEK")) return "BEK";
+            if (m.includes("GUNEY") || m.includes("GEK")) return "GEK";
+            if (m.includes("ISTANBUL") || m.includes("ISKOOP") || m.includes("İSKOOP")) return "ISKOOP";
+            if (m.includes("NEVZAT")) return "NEVZAT";
+            if (m.includes("SANCAK")) return "SANCAK";
+            if (m.includes("SELCUK") || m.includes("SELÇUK") || m.includes("SELUK")) return "SELCUK";
+            if (m.includes("AS")) return "AS";
+            
+            return "AS";
+        },
+
+        detayTabloCiz() {
+            const tbody = document.getElementById('tablo_govde');
+            let satisRows = this.parseSatisData();
+
+            satisRows.sort((a, b) => a.ismi.localeCompare(b.ismi, 'tr', { sensitivity: 'base' }));
+
+            let depoDaagilimMap = {};
+            this.depoData.forEach(d => {
+                if (d.urun) {
+                    let urunKey = d.urun.trim().toUpperCase();
+                    let miktar = !isNaN(d.miktar) ? parseFloat(d.miktar) || 0 : 0;
+                    let depoKodu = this.depoAdiniKanalizeEt(d.musteri);
+
+                    if (!depoDaagilimMap[urunKey]) {
+                        depoDaagilimMap[urunKey] = { "ALLIANCE": 0, "AS": 0, "BEK": 0, "GEK": 0, "ISKOOP": 0, "NEVZAT": 0, "SANCAK": 0, "SELCUK": 0 };
+                    }
+                    if (depoKodu && depoDaagilimMap[urunKey][depoKodu] !== undefined) {
+                        depoDaagilimMap[urunKey][depoKodu] += miktar;
+                    }
+                }
+            });
+
+            let html = "";
+            satisRows.forEach(s => {
+                let urunAdi = s.ismi ? s.ismi.trim().toUpperCase() : "";
+                let isChecked = this.secilenUrunler.has(urunAdi) ? "checked" : "";
+                let depos = depoDaagilimMap[urunAdi] || { "ALLIANCE": 0, "AS": 0, "BEK": 0, "GEK": 0, "ISKOOP": 0, "NEVZAT": 0, "SANCAK": 0, "SELCUK": 0 };
+
+                html += `
+                    <tr data-urun-row="${urunAdi}">
+                        <td class="text-center">
+                            <input type="checkbox" class="row-checkbox" data-urun="${urunAdi}" ${isChecked} onchange="stokApp.checkboxDegisti(this)">
+                        </td>
+                        <td class="text-left">${s.kodu}</td>
+                        <td class="text-left" style="font-weight: 600;">${s.ismi}</td>
+                        <td class="text-left">${s.lisansor}</td>
+                        <td class="text-num">${s.stok !== "" && !isNaN(s.stok) ? Number(s.stok).toLocaleString('tr-TR') : s.stok}</td>
+                        <td class="text-num col-alliance">${depos["ALLIANCE"] > 0 ? depos["ALLIANCE"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-as">${depos["AS"] > 0 ? depos["AS"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-bek">${depos["BEK"] > 0 ? depos["BEK"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-gek">${depos["GEK"] > 0 ? depos["GEK"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-iskoop">${depos["ISKOOP"] > 0 ? depos["ISKOOP"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-nevzat">${depos["NEVZAT"] > 0 ? depos["NEVZAT"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-sancak">${depos["SANCAK"] > 0 ? depos["SANCAK"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-selcuk">${depos["SELCUK"] > 0 ? depos["SELCUK"].toLocaleString('tr-TR') : ''}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+            this.guncelleTopluSecimDurumu();
+        },
+
+        checkboxDegisti(checkbox) {
+            let urun = checkbox.getAttribute('data-urun');
+            if (checkbox.checked) {
+                this.secilenUrunler.add(urun);
+            } else {
+                this.secilenUrunler.delete(urun);
+            }
+            this.guncelleTopluSecimDurumu();
+            this.ozetTabloCiz();
+            this.depoStokTabloCiz();
+        },
+
+        tumunuSecKadir(masterCheckbox) {
+            let visibleCheckboxes = document.querySelectorAll('#tablo_govde tr:not([style*="display: none"]) .row-checkbox');
+            visibleCheckboxes.forEach(cb => {
+                cb.checked = masterCheckbox.checked;
+                let urun = cb.getAttribute('data-urun');
+                if (masterCheckbox.checked) {
+                    this.secilenUrunler.add(urun);
+                } else {
+                    this.secilenUrunler.delete(urun);
+                }
+            });
+            this.ozetTabloCiz();
+            this.depoStokTabloCiz();
+        },
+
+        guncelleTopluSecimDurumu() {
+            let allCbs = document.querySelectorAll('#tablo_govde .row-checkbox');
+            let masterCb = document.getElementById('select_all_checkbox');
+            if (!masterCb || allCbs.length === 0) return;
+            
+            let checkedCbs = document.querySelectorAll('#tablo_govde .row-checkbox:checked');
+            if (checkedCbs.length === allCbs.length) {
+                masterCb.checked = true;
+                masterCb.indeterminate = false;
+            } else if (checkedCbs.length > 0) {
+                masterCb.checked = false;
+                masterCb.indeterminate = true;
+            } else {
+                masterCb.checked = false;
+                masterCb.indeterminate = false;
+            }
+        },
+
+        ozetTabloCiz() {
+            const tbody = document.getElementById('ozet_tablo_govde');
+            let satisRows = this.parseSatisData();
+
+            let genStokMap = {};
+            satisRows.forEach(s => {
+                if (s.ismi) {
+                    let stok = !isNaN(s.stok) ? parseFloat(s.stok) || 0 : 0;
+                    genStokMap[s.ismi.trim().toUpperCase()] = (genStokMap[s.ismi.trim().toUpperCase()] || 0) + stok;
+                }
+            });
+
+            let depoDaagilimMap = {};
+            let depoDetayListMap = {};
+            this.depoData.forEach(d => {
+                if (d.urun) {
+                    let urunKey = d.urun.trim().toUpperCase();
+                    let miktar = !isNaN(d.miktar) ? parseFloat(d.miktar) || 0 : 0;
+                    let depoKodu = this.depoAdiniKanalizeEt(d.musteri);
+
+                    if (!depoDaagilimMap[urunKey]) {
+                        depoDaagilimMap[urunKey] = { "ALLIANCE": 0, "AS": 0, "BEK": 0, "GEK": 0, "ISKOOP": 0, "NEVZAT": 0, "SANCAK": 0, "SELCUK": 0 };
+                    }
+                    if (depoKodu && depoDaagilimMap[urunKey][depoKodu] !== undefined) {
+                        depoDaagilimMap[urunKey][depoKodu] += miktar;
+                    }
+
+                    if (miktar > 0) {
+                        if (!depoDetayListMap[urunKey]) depoDetayListMap[urunKey] = [];
+                        depoDetayListMap[urunKey].push({ musteri: d.musteri, miktar: miktar });
+                    }
+                }
+            });
+
+            let tumUrunler = Array.from(new Set([...Object.keys(genStokMap), ...Object.keys(depoDaagilimMap)]));
+            tumUrunler.sort((a, b) => a.localeCompare(b, 'tr', { sensitivity: 'base' }));
+
+            if (this.secilenUrunler.size > 0) {
+                tumUrunler = tumUrunler.filter(u => this.secilenUrunler.has(u));
+            }
+
+            if (tumUrunler.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 40px;">Lutfen 1. sekmeden goruntulenecek urunleri secin veya veri yukleyin.</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            tumUrunler.forEach(urun => {
+                let genStok = genStokMap[urun] || 0;
+                let depos = depoDaagilimMap[urun] || { "ALLIANCE": 0, "AS": 0, "BEK": 0, "GEK": 0, "ISKOOP": 0, "NEVZAT": 0, "SANCAK": 0, "SELCUK": 0 };
+
+                let depoToplam = Object.values(depos).reduce((a, b) => a + b, 0);
+                let genelToplam = genStok + depoToplam;
+
+                let detaylar = depoDetayListMap[urun] || [];
+                let genelStokDetay = [];
+                if (genStok > 0) {
+                    genelStokDetay.push({ musteri: "GEN Ilac Ana Stok (GEN STOK)", miktar: genStok });
+                }
+                detaylar.forEach(d => genelStokDetay.push(d));
+                let genelDetayJson = encodeURIComponent(JSON.stringify(genelStokDetay));
+
+                html += `
+                    <tr>
+                        <td class="text-left" style="font-weight: 700; color: #0f172a;">${urun}</td>
+                        <td class="text-num col-gen">${genStok > 0 ? genStok.toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-alliance">${depos["ALLIANCE"] > 0 ? depos["ALLIANCE"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-as">${depos["AS"] > 0 ? depos["AS"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-bek">${depos["BEK"] > 0 ? depos["BEK"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-gek">${depos["GEK"] > 0 ? depos["GEK"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-iskoop">${depos["ISKOOP"] > 0 ? depos["ISKOOP"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-nevzat">${depos["NEVZAT"] > 0 ? depos["NEVZAT"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-sancak">${depos["SANCAK"] > 0 ? depos["SANCAK"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-selcuk">${depos["SELCUK"] > 0 ? depos["SELCUK"].toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num col-toplam clickable-cell" data-detay="${genelDetayJson}" onclick="stokApp.modalAc('${urun}', this, 'genel')">
+                            ${genelToplam > 0 ? genelToplam.toLocaleString('tr-TR') + ' <span style="font-size: 11px; color: #047857; font-weight: normal;">(Detay)</span>' : ''}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        },
+
+        depoStokTabloCiz() {
+            const tbody = document.getElementById('depostok_tablo_govde');
+            let satisRows = this.parseSatisData();
+
+            let genStokMap = {};
+            satisRows.forEach(s => {
+                if (s.ismi) {
+                    let stok = !isNaN(s.stok) ? parseFloat(s.stok) || 0 : 0;
+                    genStokMap[s.ismi.trim().toUpperCase()] = (genStokMap[s.ismi.trim().toUpperCase()] || 0) + stok;
+                }
+            });
+
+            let urunDepoDetayMap = {};
+            this.depoData.forEach(d => {
+                if (d.urun) {
+                    let urunKey = d.urun.trim().toUpperCase();
+                    let miktar = !isNaN(d.miktar) ? parseFloat(d.miktar) || 0 : 0;
+                    if (miktar > 0) {
+                        if (!urunDepoDetayMap[urunKey]) urunDepoDetayMap[urunKey] = [];
+                        urunDepoDetayMap[urunKey].push({ musteri: d.musteri, miktar: miktar });
+                    }
+                }
+            });
+
+            let tumUrunler = Array.from(new Set([...Object.keys(genStokMap), ...Object.keys(urunDepoDetayMap)]));
+            tumUrunler.sort((a, b) => a.localeCompare(b, 'tr', { sensitivity: 'base' }));
+
+            if (this.secilenUrunler.size > 0) {
+                tumUrunler = tumUrunler.filter(u => this.secilenUrunler.has(u));
+            }
+
+            if (tumUrunler.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 40px;">Lutfen 1. sekmeden goruntulenecek urunleri secin veya veri yukleyin.</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            tumUrunler.forEach(urun => {
+                let genStok = genStokMap[urun] || 0;
+                let detaylar = urunDepoDetayMap[urun] || [];
+                let depoToplam = detaylar.reduce((acc, curr) => acc + curr.miktar, 0);
+                let genelToplam = genStok + depoToplam;
+
+                let depoDetayJson = encodeURIComponent(JSON.stringify(detaylar));
+
+                let genelStokDetay = [];
+                if (genStok > 0) {
+                    genelStokDetay.push({ musteri: "GEN Ilac Ana Stok (GEN STOK)", miktar: genStok });
+                }
+                detaylar.forEach(d => genelStokDetay.push(d));
+                let genelDetayJson = encodeURIComponent(JSON.stringify(genelStokDetay));
+
+                html += `
+                    <tr>
+                        <td class="text-left" style="font-weight: 700; color: #0f172a;">${urun}</td>
+                        <td class="text-num col-gen">${genStok > 0 ? genStok.toLocaleString('tr-TR') : ''}</td>
+                        <td class="text-num clickable-cell" data-detay="${depoDetayJson}" onclick="stokApp.modalAc('${urun}', this, 'depo')">
+                            ${depoToplam > 0 ? depoToplam.toLocaleString('tr-TR') + ' <span style="font-size: 11px; color: #64748b; font-weight: normal;">(Detay)</span>' : 'Stok Yok'}
+                        </td>
+                        <td class="text-num col-toplam clickable-cell" data-detay="${genelDetayJson}" onclick="stokApp.modalAc('${urun}', this, 'genel')">
+                            ${genelToplam > 0 ? genelToplam.toLocaleString('tr-TR') + ' <span style="font-size: 11px; color: #047857; font-weight: normal;">(Detay)</span>' : 'Stok Yok'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        },
+
+        modalAc(urunAdi, element, tip) {
+            let encodedDetay = element.getAttribute('data-detay');
+            if (!encodedDetay) return;
+            let detaylar = JSON.parse(decodeURIComponent(encodedDetay));
+
+            let baslikEk = tip === 'genel' ? "GEN + Depolar Tum Stok Dagilimi" : "Musteri Depolari Stok Dagilimi";
+            document.getElementById('modal_baslik').innerText = `${urunAdi} - ${baslikEk}`;
+            
+            let icerikBody = document.getElementById('modal_icerik');
+            
+            let html = "";
+            if (detaylar.length === 0) {
+                html = `<tr><td colspan="2" style="text-align: center; color: #64748b;">Bu urune ait kayitli stok bulunamadi.</td></tr>`;
+            } else {
+                detaylar.forEach(d => {
+                    let isGen = d.musteri.includes("GEN Ilac");
+                    let rowBg = isGen ? "background: #e0f2fe;" : "";
+                    let textColor = isGen ? "color: #0369a1; font-weight: 800;" : "color: #1e3a8a; font-weight: 600;";
+
+                    html += `
+                        <tr style="${rowBg}">
+                            <td style="${textColor}">${d.musteri}</td>
+                            <td style="text-align: right; font-weight: 700; color: #059669;">${d.miktar.toLocaleString('tr-TR')} Kutu</td>
+                        </tr>
+                    `;
+                });
+            }
+            icerikBody.innerHTML = html;
+            document.getElementById('depo_modal').style.display = 'flex';
+        },
+
+        modalKapat() {
+            document.getElementById('depo_modal').style.display = 'none';
+        },
+
+        emailModalAc() {
+            let ozetHtml = document.getElementById('ozet_tablo').outerHTML;
+            document.getElementById('email_table_preview').innerHTML = ozetHtml;
+            document.getElementById('email_modal').style.display = 'flex';
+        },
+
+        emailModalKapat() {
+            document.getElementById('email_modal').style.display = 'none';
+        },
+
+        emailGonderAction() {
+            let to = document.getElementById('email_to').value;
+            let subject = document.getElementById('email_subject').value;
+            let message = document.getElementById('email_message').value;
+
+            let secilenTarih = document.getElementById('report_date_picker').value || "20261014";
+            let [yil, ay, gun] = secilenTarih.split('-');
+            let tarihStr = `${yil}${ay}${gun}`;
+
+            let name1 = `GEN_Depo_Dagilim_Ozet_${tarihStr}.xlsx`;
+            let name2 = `GEN_Stok_Raporu_${tarihStr}.xlsx`;
+            let baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+            let url1 = baseUrl + name1;
+            let url2 = baseUrl + name2;
+
+            alert(`✅ E-Posta Hazırlama Komutu Başarıyla Oluşturuldu!\n\nAlıcı: ${to}\nKonu: ${subject}\nRapor İndirme Bağlantıları Eklendi:\n- ${url1}\n- ${url2}\n\nRaporlarınız öncelikle indirilecek ve e-posta istemciniz açılacaktır.`);
+
+            this.raporuIndirOzel(name1);
+            setTimeout(() => this.raporuIndirOzel(name2), 500);
+
+            let bodyContent = `${message}\n\n[İndirme Bağlantıları]:\n- ${name1}: ${url1}\n- ${name2}: ${url2}`;
+            let mailtoLink = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyContent)}`;
+            window.location.href = mailtoLink;
+
+            this.emailModalKapat();
+        },
+
+        parseSatisData() {
+            let satisRows = [];
+            if (this.satisData.length > 0) {
+                let headerIdx = this.satisData.findIndex(r => r.some(c => c && (c.toString().includes("Malzeme İsmi") || c.toString().includes("Malzeme Ismi") || c.toString().includes("Malzeme Kodu"))));
+                if (headerIdx === -1) headerIdx = 0;
+                let headers = this.satisData[headerIdx] || [];
+
+                let kKodu = headers.findIndex(h => h && h.toString().includes("Kodu"));
+                let kIsim = headers.findIndex(h => h && (h.toString().includes("İsmi") || h.toString().includes("Ismi")));
+                let kLisan = headers.findIndex(h => h && (h.toString().includes("Lisansör") || h.toString().includes("Lisansor")));
+                let kStok = headers.findIndex(h => h && (h.toString().includes("Satışa Hazır Stok") || h.toString().includes("Satis") || h.toString().includes("Stok")));
+
+                for (let i = headerIdx + 1; i < this.satisData.length; i++) {
+                    let r = this.satisData[i];
+                    if (r && r.length > 0) {
+                        let kodu = kKodu !== -1 ? (r[kKodu] || "") : (r[0] || "");
+                        let ismi = kIsim !== -1 ? (r[kIsim] || "") : (r[1] || "");
+                        let lisansor = kLisan !== -1 ? (r[kLisan] || "") : (r[3] || "");
+                        let stok = kStok !== -1 ? (r[kStok] !== undefined ? r[kStok] : "") : (r[5] || "");
+
+                        if (ismi && !ismi.toString().includes("GENEL TOPLAM") && !ismi.toString().includes("Malzeme İsmi")) {
+                            satisRows.push({
+                                kodu: kodu,
+                                ismi: ismi,
+                                lisansor: lisansor,
+                                stok: stok
+                            });
+                        }
+                    }
+                }
+            }
+            return satisRows;
+        },
+
+        sekmeDegis(sekmeAdi) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            if (sekmeAdi === 'detay') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tab_detay').classList.add('active');
+            } else if (sekmeAdi === 'ozet') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tab_ozet').classList.add('active');
+            } else if (sekmeAdi === 'depostok') {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('tab_depostok').classList.add('active');
+            }
+        },
+
+        canliAra() {
+            let val = this.normalizeText(document.getElementById('multisource_search').value);
+            let activeTab = document.querySelector('.tab-content.active').id;
+            
+            if (activeTab === 'tab_detay') {
+                let trs = document.querySelectorAll('#tablo_govde tr');
+                trs.forEach(tr => {
+                    let text = this.normalizeText(tr.innerText);
+                    tr.style.display = text.includes(val) ? "" : "none";
+                });
+                this.guncelleTopluSecimDurumu();
+            } else {
+                let tabloId = activeTab === 'tab_ozet' ? '#ozet_tablo_govde tr' : '#depostok_tablo_govde tr';
+                let trs = document.querySelectorAll(tabloId);
+                trs.forEach(tr => {
+                    let text = this.normalizeText(tr.innerText);
+                    tr.style.display = text.includes(val) ? "" : "none";
+                });
+            }
+        },
+
+        filtreyiTemizle() {
+            document.getElementById('multisource_search').value = "";
+            this.canliAra();
+            document.getElementById('status_badge').innerHTML = `<i class="fas fa-info-circle"></i> Arama filtresi temizlendi.`;
+        },
+
+        sayfayiTemizle() {
+            this.satisData = [];
+            this.depoData = [];
+            this.secilenUrunler.clear();
+            document.getElementById('hidden_file_input').value = "";
+            document.getElementById('multisource_search').value = "";
+            let masterCb = document.getElementById('select_all_checkbox');
+            if (masterCb) { masterCb.checked = false; masterCb.indeterminate = false; }
+            
+            document.getElementById('tablo_govde').innerHTML = `<tr><td colspan="13" style="text-align: center; color: #64748b; padding: 40px;">Henuz veri yuklenmedi.</td></tr>`;
+            document.getElementById('ozet_tablo_govde').innerHTML = `<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 40px;">Henuz veri yuklenmedi.</td></tr>`;
+            document.getElementById('depostok_tablo_govde').innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 40px;">Henuz veri yuklenmedi.</td></tr>`;
+            document.getElementById('status_badge').innerHTML = `<i class="fas fa-info-circle"></i> Tablo ve secimler sifirlandi.`;
+        },
+
+        raporuIndirOzel(dosyaAdi) {
+            let secilenTarih = document.getElementById('report_date_picker').value || "20261014";
+            let tarihFormatted = secilenTarih.replace(/-/g, '');
+            let [yil, ay, gun] = secilenTarih.split('-');
+            let labelTarih = `${gun}.${ay}.${yil}`;
+
+            let wb = XLSX.utils.book_new();
+
+            if (dosyaAdi.includes("Ozet")) {
+                let ws_data = [
+                    ["ILAC ADI", "Turkiye_Satis_Stok_Raporu", `Depo Stoklari Musteri Orun ${labelTarih}`, "", "", "", "", "", "", "", "GENEL TOPLAM"],
+                    ["", "GEN STOK", "ALLIANCE", "AS", "BEK", "GEK", "ISKOOP", "NEVZAT", "SANCAK", "SELCUK", ""]
+                ];
+
+                let trs = document.querySelectorAll('#ozet_tablo_govde tr');
+                trs.forEach(tr => {
+                    if (tr.children.length >= 11) {
+                        let row = [];
+                        row.push(tr.children[0].innerText.trim());
+                        for (let i = 1; i <= 10; i++) {
+                            let valStr = tr.children[i].innerText.replace(' (Detay)', '').replace(/\./g, '').trim();
+                            let numVal = valStr !== "" && !isNaN(valStr) ? parseFloat(valStr) : "";
+                            row.push(numVal);
+                        }
+                        ws_data.push(row);
+                    }
+                });
+
+                let ws = XLSX.utils.aoa_to_sheet(ws_data);
+                ws['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+                    { s: { r: 0, c: 2 }, e: { r: 0, c: 9 } },
+                    { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }
+                ];
+                XLSX.utils.book_append_sheet(wb, ws, "DEPO_DAGILIM_OZET");
+                XLSX.writeFile(wb, `GEN_Depo_Dagilim_Ozet_${tarihFormatted}.xlsx`);
+            } else {
+                let ws_data = [
+                    ["ILAC ADI", "Turkiye_Satis_Stok_Raporu", `Depo Stoklari Musteri Orun ${labelTarih}`, "GENEL TOPLAM"],
+                    ["", "GEN STOK", "DEPO STOKLARI", ""]
+                ];
+
+                let trs = document.querySelectorAll('#depostok_tablo_govde tr');
+                trs.forEach(tr => {
+                    if (tr.children.length >= 4) {
+                        let urunAdi = tr.children[0].innerText.trim();
+                        let genStok = tr.children[1].innerText.replace(/\./g, '').trim();
+                        let depoStokText = tr.children[2].innerText.replace(' (Detay)', '').replace(/\./g, '').trim();
+                        let genelToplamText = tr.children[3].innerText.replace(' (Detay)', '').replace(/\./g, '').trim();
+
+                        ws_data.push([
+                            urunAdi,
+                            genStok !== "" ? parseFloat(genStok) : "",
+                            depoStokText !== "" && !isNaN(depoStokText) ? parseFloat(depoStokText) : 0,
+                            genelToplamText !== "" && !isNaN(genelToplamText) ? parseFloat(genelToplamText) : 0
+                        ]);
+                    }
+                });
+
+                let ws = XLSX.utils.aoa_to_sheet(ws_data);
+                ws['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+                    { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }
+                ];
+                XLSX.utils.book_append_sheet(wb, ws, "URUN_DEPO_STOK_DETAY");
+                XLSX.writeFile(wb, `GEN_Stok_Raporu_${tarihFormatted}.xlsx`);
+            }
+        },
+
+        raporuIndir() {
+            this.raporuIndirOzel("Ozet");
+            setTimeout(() => this.raporuIndirOzel("Stok"), 500);
+        }
+    };
+
+    window.onload = () => {
+        stokApp.initLiveClock();
+    };
+</script>
+
+</body>
+</html>
